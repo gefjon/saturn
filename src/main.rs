@@ -7,6 +7,7 @@ const MMIO_BASE: u32 = 0x3F00_0000;
 
 mod boot;
 
+mod asm;
 mod processor_control_regs;
 mod gpio;
 mod uart;
@@ -24,18 +25,20 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 }
 
 fn kernel_entry() -> ! {
-    let uart = uart::MiniUart::new();
+    let uart = unsafe { uart::Uart1::new() };
 
-    // set up serial console
-    uart.init();
-    uart.puts("\n[0] UART is live!\n");
+    uart.write("\n[0] UART is live!\n");
 
-    uart.puts("[1] Press a key to continue booting... ");
-    uart.getc();
-    uart.puts("Greetings fellow Rustacean!\n");
+    uart.write("[1] Press a key to continue booting... ");
+
+    uart.recieve();
+    
+    
+    uart.write("Greetings fellow Rustacean!\n");
 
     // echo everything back
     loop {
-        uart.send(uart.getc());
+           let c = uart.recieve();
+           uart.send(c);
     }
 }
