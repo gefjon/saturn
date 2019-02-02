@@ -1,0 +1,21 @@
+[package]
+name = "saturn"
+version = "0.1.0"
+authors = ["Arthur Goldman <arthur@goldman-tribe.org>"]
+edition = "2018"
+
+[[bin]]
+name = "kernel8"
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[dependencies]
+r0 = "0.2.2"
+register = "0.3.2"
+lazy_static = { version = "1.2.0", features = ["spin_no_std"] }
+spin = "0.4.10"
