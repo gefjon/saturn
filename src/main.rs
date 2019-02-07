@@ -1,13 +1,15 @@
 #![cfg(target_arch="aarch64")]
 #![no_std]
 #![no_main]
-#![feature(asm)]
+#![feature(asm, try_from)]
 
 const MMIO_BASE: u32 = 0x3F00_0000;
 
 mod boot;
 
+mod fundamentals;
 mod asm;
+mod gc;
 mod processor_control_regs;
 mod gpio;
 mod uart;
@@ -24,15 +26,14 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     sleep_forever()
 }
 
-fn kernel_entry() -> ! {
-    let uart = unsafe { uart::Uart1::new() };
+fn core_0_main() -> ! {
+    let uart = uart::UART_1.lock();
 
     uart.write("\n[0] UART is live!\n");
 
     uart.write("[1] Press a key to continue booting... ");
 
     uart.recieve();
-    
     
     uart.write("Greetings fellow Rustacean!\n");
 

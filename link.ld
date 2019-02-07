@@ -22,16 +22,14 @@
  * SOFTWARE.
  */
 
-ENTRY(_boot_cores);
-
 SECTIONS
 {
     . = 0x80000;
     __text_start = .;
-
     .text :
     {
-        KEEP(*(.text.boot)) *(.text .text.*)
+        KEEP(*(.text.boot))
+        *(.text .text.*)
     }
 
     .rodata ALIGN(8):

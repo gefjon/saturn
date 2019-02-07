@@ -17,5 +17,18 @@ panic = "abort"
 [dependencies]
 r0 = "0.2.2"
 register = "0.3.2"
-lazy_static = { version = "1.2.0", features = ["spin_no_std"] }
 spin = "0.4.10"
+
+[dependencies.failure]
+version = "0.1"
+default_features = false # no `std`
+features = ["derive"]
+
+[dependencies.saturn_tagging]
+version = "0.2.1"
+git = "https://github.com/gefjon/saturn_tagging"
+features = ["no_std"]
+
+[dependencies.lazy_static]
+version = "1.2.0"
+features = ["spin_no_std"]

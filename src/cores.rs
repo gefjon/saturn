@@ -47,6 +47,7 @@ use core::hint::unreachable_unchecked;
 
 // exists as a hack because I can't figure out how to get the macro
 // to export the same enum from `MPIDR_EL1::CORE_NR::Value`
+#[derive(PartialEq, Copy, Clone)]
 pub enum CoreNo {
     Core0,
     Core1,

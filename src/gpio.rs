@@ -322,6 +322,8 @@ const GPIO_BLOCK: *const RegisterBlock =
     (super::MMIO_BASE + 0x20_0000) as *const _;
 
 impl Gpio {
+    /// Invariant: must not be contested by another thread or a
+    /// previously created `Gpio`
     pub unsafe fn new() -> Self {
         Gpio
     }

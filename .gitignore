@@ -1,2 +1,4 @@
 /target
 **/*.rs.bk
+kernel8
+kernel8.img

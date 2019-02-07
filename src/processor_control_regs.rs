@@ -1,4 +1,4 @@
-use register::{cpu::RegisterReadWrite, *};
+use register::{cpu::RegisterReadWrite};
 
 struct SP {}
 
