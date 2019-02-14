@@ -1,11 +1,10 @@
 #![allow(non_snake_case)]
 
-use core::ops;
+use core::{ops, fmt};
 use register::mmio::{ReadWrite, ReadOnly, WriteOnly};
 use crate::gpio::Gpio;
 use lazy_static::lazy_static;
 use spin::Mutex;
-
 
 mod registers;
 use registers::*;
@@ -101,7 +100,7 @@ impl Uart1 {
         );
         self.AUX_MU_IO.set(u32::from(byte))
     }
-    pub  fn recieve(&self) -> u8 {
+    pub fn recieve(&self) -> u8 {
         crate::asm::block_until(
             || self.AUX_MU_LSR.is_set(MiniUartLineStatus::DATA_READY),
             1, // TODO: figure out what the right number of cycles to
@@ -109,10 +108,14 @@ impl Uart1 {
         );
         self.AUX_MU_IO.get() as u8
     }
-    pub fn write(&self, s: &str) {
+}
+
+impl fmt::Write for Uart1 {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
         for b in s.bytes() {
             self.send(b); 
         }
+        Ok(())
     }
 }
 
@@ -148,4 +151,23 @@ impl RegisterBlock {
         self.AUX_MU_CNTL
             .write(MiniUartExtraControl::RX_EN::Enabled + MiniUartExtraControl::TX_EN::Enabled);
     }
+}
+
+#[doc(hidden)]
+/// Intended only to be called by `print!`
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    
+    UART_1.lock().write_fmt(args).unwrap();
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => (crate::uart::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => (print!("\n"));
+    ($($arg:tt)*) => (print!("{}\n", format_args!($($arg)*)));
 }

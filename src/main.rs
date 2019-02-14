@@ -1,19 +1,41 @@
 #![cfg(target_arch="aarch64")]
 #![no_std]
 #![no_main]
-#![feature(asm, try_from)]
+#![feature(asm, try_from, naked_functions, panic_info_message)]
 
 const MMIO_BASE: u32 = 0x3F00_0000;
 
 mod boot;
-
-mod fundamentals;
+// mod mailbox;
+// mod fundamentals;
 mod asm;
-mod gc;
-mod processor_control_regs;
+// mod gc;
 mod gpio;
+#[macro_use]
 mod uart;
 mod cores;
+// mod funcall;
+
+use register::cpu::RegisterReadOnly;
+
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) ->! {
+    print!(
+        "KERNEL PANIC"
+    );
+    
+    if let Some(loc) = info.location () {
+        print!(" @ {}", loc);
+    }
+    
+    if let Some(msg) = info.message() {
+        print!(": {}", msg);
+    }
+    
+    println!();
+    
+    sleep_forever()
+}
 
 fn sleep_forever() ->! {
     loop {
@@ -21,25 +43,12 @@ fn sleep_forever() ->! {
     }
 }
 
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    sleep_forever()
-}
-
 fn core_0_main() -> ! {
-    let uart = uart::UART_1.lock();
+    println!();
+    println!("Hello, brave new world!");
 
-    uart.write("\n[0] UART is live!\n");
+    println!("I am in EL{}", cortex_a::regs::CurrentEL.get());
 
-    uart.write("[1] Press a key to continue booting... ");
-
-    uart.recieve();
-    
-    uart.write("Greetings fellow Rustacean!\n");
-
-    // echo everything back
-    loop {
-           let c = uart.recieve();
-           uart.send(c);
-    }
+    println!("I don't know what to do next, so I'm gonna panic.");
+    panic!("Check out this panic message, though!");
 }
