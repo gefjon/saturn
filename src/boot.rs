@@ -1,26 +1,25 @@
-use crate::{*, cores::CoreNo};
+use crate::{cores::CoreNo, *};
 use cortex_a::{asm::eret, regs::*};
 use register::cpu::RegisterReadWrite;
 
 // These are all defined in `/link.ld`
 extern "C" {
     static __text_start: u64;
-    
+
     static mut __bss_start: u64;
     static mut __bss_end: u64;
-    
+
     static mut __data_start: u64;
     static mut __data_end: u64;
     static __data_loadaddr: u64;
 }
 
 #[no_mangle]
-#[link_section=".text.boot"]
-pub unsafe extern fn _el2_entry() -> ! {
+#[link_section = ".text.boot"]
+pub unsafe extern "C" fn _el2_entry() -> ! {
     let me = cores::which_core();
 
     if me == CoreNo::Core0 {
-        
         // Enable timer counter registers for EL1
         CNTHCTL_EL2.write(CNTHCTL_EL2::EL1PCEN::SET + CNTHCTL_EL2::EL1PCTEN::SET);
         // No offset for reading the counters
@@ -81,10 +80,9 @@ unsafe fn sp_for(corenr: CoreNo) -> u64 {
     text_start() - (corenr as u64 * stack_size_per_thread())
 }
 
-
 unsafe fn init_bss_data() {
     r0::zero_bss(&mut __bss_start, &mut __bss_end);
     r0::init_data(&mut __data_start, &mut __data_end, &__data_loadaddr);
-    
+
     asm::dsb()
 }

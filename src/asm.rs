@@ -29,21 +29,25 @@ pub fn block(cycles: u32) {
 /// not affect the ordering of any other instructions executing on the
 /// processor.
 pub fn dmb() {
-    unsafe { asm!("dmb sy"
-                  :
-                  :
-                  :
-                  : "volatile"
-    ) }
+    unsafe {
+        asm!("dmb sy"
+                      :
+                      :
+                      :
+                      : "volatile"
+        )
+    }
 }
 #[inline(always)]
 pub fn dsb() {
-    unsafe { asm!("dsb sy"
-                  :
-                  :
-                  :
-                  : "volatile"
-    )}
+    unsafe {
+        asm!("dsb sy"
+                      :
+                      :
+                      :
+                      : "volatile"
+        )
+    }
 }
 
 #[inline(always)]
@@ -54,7 +58,9 @@ where
     F: FnMut() -> bool,
 {
     loop {
-        if func() { return }
+        if func() {
+            return;
+        }
         block(wait);
     }
 }

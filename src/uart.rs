@@ -1,18 +1,16 @@
 #![allow(non_snake_case)]
 
-use core::{ops, fmt};
-use register::mmio::{ReadWrite, ReadOnly, WriteOnly};
 use crate::gpio::Gpio;
+use core::{fmt, ops};
 use lazy_static::lazy_static;
+use register::mmio::{ReadOnly, ReadWrite, WriteOnly};
 use spin::Mutex;
 
 mod registers;
 use registers::*;
 
 lazy_static! {
-    pub static ref UART_1: Mutex<Uart1> = Mutex::new(unsafe {
-        Uart1::new()
-    });
+    pub static ref UART_1: Mutex<Uart1> = Mutex::new(unsafe { Uart1::new() });
 }
 
 #[repr(C)]
@@ -37,7 +35,7 @@ pub struct RegisterBlock {
     /// 0x50 - Mini Uart Modem Control
     AUX_MU_MCR: ReadWrite<u32, MiniUartModemControl::Register>,
     /// 0x54 - Mini Uart Line Status
-    AUX_MU_LSR: ReadOnly<u32, MiniUartLineStatus::Register>,    
+    AUX_MU_LSR: ReadOnly<u32, MiniUartLineStatus::Register>,
     /// 0x58 - Mini Uart Modem Status
     AUX_MU_MSR: ReadOnly<u32, MiniUartModemStatus::Register>,
     /// 0x5C - Mini Uart Scratch
@@ -113,7 +111,7 @@ impl Uart1 {
 impl fmt::Write for Uart1 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for b in s.bytes() {
-            self.send(b); 
+            self.send(b);
         }
         Ok(())
     }
@@ -126,8 +124,7 @@ impl ops::Deref for Uart1 {
     }
 }
 
-const AUX_PERIPHERALS_BLOCK: *const RegisterBlock =
-    (super::MMIO_BASE + 0x21_5000) as *const _;
+const AUX_PERIPHERALS_BLOCK: *const RegisterBlock = (super::MMIO_BASE + 0x21_5000) as *const _;
 
 impl RegisterBlock {
     /// Initialize UART1 on GPIO pins 14 & 15
@@ -137,17 +134,20 @@ impl RegisterBlock {
     /// just copied it from
     /// [https://github.com/rust-embedded/rust-raspi3-OS-tutorials/blob/master/03_uart1/src/uart.rs]
     unsafe fn init_uart1(&self) {
-        self.AUX_ENABLES.modify(AuxiliaryEnables::MINI_UART_ENABLE::SET);
+        self.AUX_ENABLES
+            .modify(AuxiliaryEnables::MINI_UART_ENABLE::SET);
         self.AUX_MU_IER.set(0);
         self.AUX_MU_CNTL.set(0);
-        self.AUX_MU_LCR.write(MiniUartLineControl::DATA_SIZE::EightBit);
+        self.AUX_MU_LCR
+            .write(MiniUartLineControl::DATA_SIZE::EightBit);
         self.AUX_MU_MCR.set(0);
         self.AUX_MU_IER.set(0);
-        self.AUX_MU_IIR.write(MiniUartInterruptIdentify::FIFO_CLEAR::All);
+        self.AUX_MU_IIR
+            .write(MiniUartInterruptIdentify::FIFO_CLEAR::All);
         self.AUX_MU_BAUD.write(MiniUartBaudrate::RATE.val(270)); // 115200 baud
 
         Gpio::new().init_uart1();
-        
+
         self.AUX_MU_CNTL
             .write(MiniUartExtraControl::RX_EN::Enabled + MiniUartExtraControl::TX_EN::Enabled);
     }
@@ -157,7 +157,7 @@ impl RegisterBlock {
 /// Intended only to be called by `print!`
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
-    
+
     UART_1.lock().write_fmt(args).unwrap();
 }
 

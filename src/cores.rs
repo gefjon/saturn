@@ -20,28 +20,31 @@ struct ArmSystemRegister<R>(core::marker::PhantomData<R>);
 
 impl RegisterReadWrite<u64, MPIDR_EL1::Register> for ArmSystemRegister<MPIDR_EL1::Register> {
     #[inline]
-    fn get(&self) -> u64 { unsafe {
-        let res;
-        asm!("mrs $0, mpidr_el1"
-             : "=r"(res)
-        );
-        res
-    } }
+    fn get(&self) -> u64 {
+        unsafe {
+            let res;
+            asm!("mrs $0, mpidr_el1"
+                 : "=r"(res)
+            );
+            res
+        }
+    }
     #[inline]
-    fn set(&self, value: u64) { unsafe {
-        asm!("msr mpidr_el1 $0"
-             :
-             : "r"(value)
-             :
-             : "volatile"
-        );
-    } }
+    fn set(&self, value: u64) {
+        unsafe {
+            asm!("msr mpidr_el1 $0"
+                 :
+                 : "r"(value)
+                 :
+                 : "volatile"
+            );
+        }
+    }
 }
 
 /// Multiprocessor Affinity Register
-static MPIDR_EL1
-    : ArmSystemRegister<MPIDR_EL1::Register>
-    = ArmSystemRegister(core::marker::PhantomData);
+static MPIDR_EL1: ArmSystemRegister<MPIDR_EL1::Register> =
+    ArmSystemRegister(core::marker::PhantomData);
 
 use core::hint::unreachable_unchecked;
 
@@ -58,7 +61,7 @@ pub enum CoreNo {
 impl From<MPIDR_EL1::CORE_NR::Value> for CoreNo {
     fn from(nr: MPIDR_EL1::CORE_NR::Value) -> CoreNo {
         use self::MPIDR_EL1::CORE_NR::Value;
-        
+
         match nr {
             Value::Core0 => CoreNo::Core0,
             Value::Core1 => CoreNo::Core1,
@@ -70,7 +73,9 @@ impl From<MPIDR_EL1::CORE_NR::Value> for CoreNo {
 
 /// Returns the `CoreNo` corresponding to the active thread
 pub fn which_core() -> CoreNo {
-    MPIDR_EL1.read_as_enum(MPIDR_EL1::CORE_NR)
+    MPIDR_EL1
+        .read_as_enum(MPIDR_EL1::CORE_NR)
         .map(<MPIDR_EL1::CORE_NR::Value>::into)
-        .unwrap_or_else(#[inline] || unsafe { unreachable_unchecked() })
+        .unwrap_or_else(#[inline]
+        || unsafe { unreachable_unchecked() })
 }

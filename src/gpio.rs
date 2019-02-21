@@ -1,7 +1,10 @@
 #![cfg(target_arch="aarch64")]
 
 use core::ops;
-use register::{*, mmio::{ReadOnly, ReadWrite, WriteOnly}};
+use register::{
+    mmio::{ReadOnly, ReadWrite, WriteOnly},
+    *,
+};
 
 register_bitfields! {
     u32,
@@ -95,7 +98,7 @@ register_bitfields! {
         FSEL51 OFFSET(3) NUMBITS(3) [],
         FSEL50 OFFSET(0) NUMBITS(3) []
     ],
-    
+
     OutputSet0 [
         SET OFFSET(0) NUMBITS(32) []
     ],
@@ -103,7 +106,7 @@ register_bitfields! {
         RESERVED OFFSET(22) NUMBITS(10) [],
         SET OFFSET(0) NUMBITS(22) []
     ],
-    
+
     OutputClear0 [
         CLR OFFSET(0) NUMBITS(32) []
     ],
@@ -111,7 +114,7 @@ register_bitfields! {
         RESERVED OFFSET(22) NUMBITS(10) [],
         CLR OFFSET(0) NUMBITS(22) []
     ],
-    
+
     PinLevel0 [
         LEV OFFSET(0) NUMBITS(32) []
     ],
@@ -119,7 +122,7 @@ register_bitfields! {
         RESERVED OFFSET(22) NUMBITS(10) [],
         LEV OFFSET(0) NUMBITS(22) []
     ],
-    
+
     EventDetectStatus0 [
         EDS OFFSET(0) NUMBITS(32) []
     ],
@@ -127,7 +130,7 @@ register_bitfields! {
         RESERVED OFFSET(22) NUMBITS(10) [],
         EDS OFFSET(0) NUMBITS(22) []
     ],
-    
+
     RisingEdgeDetectEnable0 [
         REN OFFSET(0) NUMBITS(32) []
     ],
@@ -135,7 +138,7 @@ register_bitfields! {
         RESERVED OFFSET(22) NUMBITS(10) [],
         REN OFFSET(0) NUMBITS(22) []
     ],
-    
+
     FallingEdgeDetectEnable0 [
          FEN OFFSET(0) NUMBITS(32) []
     ],
@@ -143,7 +146,7 @@ register_bitfields! {
         RESERVED OFFSET(22) NUMBITS(10) [],
         FEN OFFSET(0) NUMBITS(22) []
     ],
-    
+
     HighDetectEnable0 [
          HEN OFFSET(0) NUMBITS(32) []
     ],
@@ -151,7 +154,7 @@ register_bitfields! {
         RESERVED OFFSET(22) NUMBITS(10) [],
         HEN OFFSET(0) NUMBITS(32) []
     ],
-    
+
     LowDetectEnable0 [
         LEN OFFSET(0) NUMBITS(32) []
     ],
@@ -318,8 +321,7 @@ impl ops::Deref for Gpio {
     }
 }
 
-const GPIO_BLOCK: *const RegisterBlock =
-    (super::MMIO_BASE + 0x20_0000) as *const _;
+const GPIO_BLOCK: *const RegisterBlock = (super::MMIO_BASE + 0x20_0000) as *const _;
 
 impl Gpio {
     /// Invariant: must not be contested by another thread or a
@@ -329,18 +331,16 @@ impl Gpio {
     }
     /// Map pins 14 & 15 to UART1
     pub fn init_uart1(&self) {
-        let alt_modes_for_pins_14_15
-            = AlternateFunctionSelect1::FSEL14::TXD1
-            + AlternateFunctionSelect1::FSEL15::RXD1;
+        let alt_modes_for_pins_14_15 =
+            AlternateFunctionSelect1::FSEL14::TXD1 + AlternateFunctionSelect1::FSEL15::RXD1;
         self.FSEL_1.modify(alt_modes_for_pins_14_15);
 
         self.PUD.set(0);
 
         crate::asm::block(150);
 
-        let assert_clocks_14_15
-            = PullUpDownClock0::PUDCLK15::AssertClock
-            + PullUpDownClock0::PUDCLK14::AssertClock;
+        let assert_clocks_14_15 =
+            PullUpDownClock0::PUDCLK15::AssertClock + PullUpDownClock0::PUDCLK14::AssertClock;
         self.PUD_CLK_0.write(assert_clocks_14_15);
 
         crate::asm::block(150);
