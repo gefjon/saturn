@@ -84,5 +84,7 @@ unsafe fn init_bss_data() {
     r0::zero_bss(&mut __bss_start, &mut __bss_end);
     r0::init_data(&mut __data_start, &mut __data_end, &__data_loadaddr);
 
+    crate::GLOBAL.init((&mut __bss_end) as *mut u64 as *mut u8);
+
     asm::dsb()
 }

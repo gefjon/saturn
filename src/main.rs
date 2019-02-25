@@ -1,12 +1,28 @@
 #![cfg(target_arch = "aarch64")]
 #![no_std]
 #![no_main]
-#![feature(asm, try_from, naked_functions, panic_info_message)]
+#![feature(
+    asm,
+    try_from,
+    naked_functions,
+    panic_info_message,
+    align_offset,
+    alloc,
+    alloc_error_handler
+)]
 
 const MMIO_BASE: u32 = 0x3F00_0000;
 
+mod allocate;
+use crate::allocate::Allocator;
+
+extern crate alloc;
+
+#[global_allocator]
+/// This is initialized in `boot::init_bss_data`
+static GLOBAL: Allocator = Allocator::uninit();
+
 mod boot;
-// mod mailbox;
 // mod fundamentals;
 mod asm;
 // mod gc;
@@ -14,6 +30,8 @@ mod gpio;
 #[macro_use]
 mod uart;
 mod cores;
+
+use alloc::boxed::Box;
 
 use register::cpu::RegisterReadOnly;
 
@@ -48,6 +66,12 @@ fn core_0_main() -> ! {
         "I am in EL{}",
         cortex_a::regs::CurrentEL.read(cortex_a::regs::CurrentEL::EL)
     );
+
+    unsafe {
+        GLOBAL.try_an_alloc();
+    }
+    
+    println!("I put 5 in a box and it's still {}", *five);
 
     println!("I don't know what to do next, so I'm gonna panic.");
     panic!("Check out this panic message, though!");
