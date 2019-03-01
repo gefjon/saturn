@@ -23,6 +23,7 @@ extern crate alloc;
 static GLOBAL: Allocator = Allocator::uninit();
 
 mod boot;
+mod mailbox;
 // mod fundamentals;
 mod asm;
 // mod gc;
@@ -69,10 +70,13 @@ fn core_0_main() -> ! {
 
     unsafe {
         GLOBAL.try_an_alloc();
+
+        println!(
+            "My serial number is {:x}",
+            mailbox::VC_MAILBOX.lock().read_serial_number(),
+        );
     }
     
-    println!("I put 5 in a box and it's still {}", *five);
-
     println!("I don't know what to do next, so I'm gonna panic.");
     panic!("Check out this panic message, though!");
 }
