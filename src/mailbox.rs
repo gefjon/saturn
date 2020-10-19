@@ -1,10 +1,10 @@
 //! Honestly, this is mostly taken from
 //! [https://github.com/rust-embedded/rust-raspi3-OS-tutorials/blob/master/04_mailboxes/src/mbox.rs].
 
-use core::{mem, ops, slice, ptr::copy_nonoverlapping, sync::atomic::{fence, Ordering}};
+use core::{mem, ops};
 use crate::asm::block_until;
 use register::{
-    mmio::{ReadOnly, ReadWrite, WriteOnly},
+    mmio::{ReadOnly, WriteOnly},
     *,
 };
 use lazy_static::lazy_static;
@@ -97,8 +97,7 @@ unsafe fn unbox_slice_parts(b: Box<[u32]>) -> (*mut u32, usize) {
 impl Mailbox {
     unsafe fn send(&mut self, msg: Box<[u32]>, chan: Channel)
                    -> Result<Box<[u32]>, Error> {
-        use crate::{println, print};
-        let (buf_ptr, len) = unbox_slice_parts(msg);
+        let (buf_ptr, _len) = unbox_slice_parts(msg);
         let buf_ptr = buf_ptr as u32;
         
         block_until(|| !self.STATUS.is_set(STATUS::FULL), 1);

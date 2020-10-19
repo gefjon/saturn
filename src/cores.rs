@@ -23,7 +23,7 @@ impl RegisterReadWrite<u64, MPIDR_EL1::Register> for ArmSystemRegister<MPIDR_EL1
     fn get(&self) -> u64 {
         unsafe {
             let res;
-            asm!("mrs $0, mpidr_el1"
+            llvm_asm!("mrs $0, mpidr_el1"
                  : "=r"(res)
             );
             res
@@ -32,7 +32,7 @@ impl RegisterReadWrite<u64, MPIDR_EL1::Register> for ArmSystemRegister<MPIDR_EL1
     #[inline]
     fn set(&self, value: u64) {
         unsafe {
-            asm!("msr mpidr_el1 $0"
+            llvm_asm!("msr mpidr_el1 $0"
                  :
                  : "r"(value)
                  :

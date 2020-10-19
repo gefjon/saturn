@@ -2,7 +2,7 @@ TARGET ?= aarch64-unknown-none
 KERNEL ?= kernel8
 KERNEL_IMAGE ?= $(KERNEL).img
 
-OBJCOPY ?= cargo objcopy --
+OBJCOPY ?= objcopy
 OBJCOPY_PARAMS ?= --strip-all -O binary
 
 OBJDUMP ?= cargo objdump --target $(TARGET) --

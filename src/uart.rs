@@ -98,6 +98,7 @@ impl Uart1 {
         );
         self.AUX_MU_IO.set(u32::from(byte))
     }
+    #[allow(unused)]
     pub fn recieve(&self) -> u8 {
         crate::asm::block_until(
             || self.AUX_MU_LSR.is_set(MiniUartLineStatus::DATA_READY),

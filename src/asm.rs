@@ -3,7 +3,7 @@
 /// Wait For Event
 #[inline(always)]
 pub unsafe fn _wfe() {
-    asm!("wfe"
+    llvm_asm!("wfe"
          :
          :
          :
@@ -19,6 +19,7 @@ pub fn block(cycles: u32) {
     }
 }
 
+#[allow(unused)]
 #[inline(always)]
 /// Data Memory Barrier
 ///
@@ -30,7 +31,7 @@ pub fn block(cycles: u32) {
 /// processor.
 pub fn dmb() {
     unsafe {
-        asm!("dmb sy"
+        llvm_asm!("dmb sy"
                       :
                       :
                       :
@@ -38,10 +39,11 @@ pub fn dmb() {
         )
     }
 }
+
 #[inline(always)]
 pub fn dsb() {
     unsafe {
-        asm!("dsb sy"
+        llvm_asm!("dsb sy"
                       :
                       :
                       :
@@ -68,7 +70,7 @@ where
 /// No Operation
 #[inline(always)]
 pub unsafe fn _nop() {
-    asm!("nop"
+    llvm_asm!("nop"
          :
          :
          :

@@ -17,9 +17,13 @@ extern "C" {
 #[no_mangle]
 #[link_section = ".text.boot"]
 pub unsafe extern "C" fn _el2_entry() -> ! {
-    let me = cores::which_core();
+    if cores::which_core() != CoreNo::Core0 {
+        sleep_forever();
+    }
 
-    if me == CoreNo::Core0 {
+    SP_EL1.set((&__text_start) as *const u64 as u64);
+
+    if CurrentEL.get() == CurrentEL::EL::EL2.value {
         // Enable timer counter registers for EL1
         CNTHCTL_EL2.write(CNTHCTL_EL2::EL1PCEN::SET + CNTHCTL_EL2::EL1PCTEN::SET);
         // No offset for reading the counters
@@ -38,25 +42,27 @@ pub unsafe extern "C" fn _el2_entry() -> ! {
                 + SPSR_EL2::F::Masked
                 + SPSR_EL2::M::EL1h,
         );
+        // Second, let the link register point to reset().
+        ELR_EL2.set(el1_entry_core0 as *const () as u64);
+
+        eret()
+    } else {
+        el1_entry_core0()
     }
-
-    SP_EL1.set(sp_for(me));
-
-    // Second, let the link register point to reset().
-    ELR_EL2.set(entry_for(me));
-
-    eret();
 }
 
+#[allow(unused)]
 unsafe fn el1_entry_core0() -> ! {
     init_bss_data();
     core_0_main();
 }
 
+#[allow(unused)]
 unsafe fn el1_entry_coren() -> ! {
     sleep_forever();
 }
 
+#[allow(unused)]
 #[inline(always)]
 unsafe fn entry_for(me: CoreNo) -> u64 {
     match me {
@@ -65,16 +71,19 @@ unsafe fn entry_for(me: CoreNo) -> u64 {
     }
 }
 
+#[allow(unused)]
 #[inline(always)]
 unsafe fn text_start() -> u64 {
     (&__text_start) as *const u64 as u64
 }
 
+#[allow(unused)]
 #[inline(always)]
 unsafe fn stack_size_per_thread() -> u64 {
     text_start() / 4
 }
 
+#[allow(unused)]
 #[inline(always)]
 unsafe fn sp_for(corenr: CoreNo) -> u64 {
     text_start() - (corenr as u64 * stack_size_per_thread())

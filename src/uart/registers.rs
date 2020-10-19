@@ -1,8 +1,8 @@
-use register::*;
+use register::register_bitfields;
 
 register_bitfields! {
     u32,
-    AuxiliaryInterruptStatus [
+    pub AuxiliaryInterruptStatus [
         /// If set the SPI 2 module has an interrupt pending.
         SPI2_IRQ OFFSET(2) NUMBITS(1) [],
         /// If set the SPI 1 module has an interrupt pending.
@@ -10,7 +10,7 @@ register_bitfields! {
         /// If set the mini UART has an interrupt pending.
         MINI_UART_IRQ OFFSET(0) NUMBITS(1) []
     ],
-    AuxiliaryEnables [
+    pub AuxiliaryEnables [
         /// If set the SPI 2 module is enabled.
         /// If clear the SPI 2 module is disabled. That also disables
         /// any SPI 1 module register access
@@ -26,7 +26,7 @@ register_bitfields! {
         /// mini UART register access
         MINI_UART_ENABLE OFFSET(0) NUMBITS(1) []
     ],
-    MiniUartIoData [
+    pub MiniUartIoData [
         /// Data written is put in the transmit FIFO (Provided it is
         /// not full)
         /// (Only If bit 7 of the line control register (DLAB bit) is
@@ -38,7 +38,7 @@ register_bitfields! {
         /// clear)
         DATA OFFSET(0) NUMBITS(8) []
     ],
-    MiniUartInterruptEnable [
+    pub MiniUartInterruptEnable [
         /// Must be set to 1 to receive interrupts.
         ONES OFFSET(2) NUMBITS(2) [
             Ok = 0b11
@@ -52,7 +52,7 @@ register_bitfields! {
         /// If this bit is clear no receive interrupts are generated.
         EnableRecieve OFFSET(0) NUMBITS(1) []
     ],
-    MiniUartInterruptIdentify [
+    pub MiniUartInterruptIdentify [
         /// Both bits always read as 1 as the FIFOs are always enabled
         FIFO_ENABLES OFFSET(6) NUMBITS(2) [],
         /// Always read as zero
@@ -81,14 +81,14 @@ register_bitfields! {
         /// This bit is clear whenever an interrupt is pending
         INTERRUPT_PENDING OFFSET(0) NUMBITS(1) []
     ],
-    MiniUartLineControl [
+    pub MiniUartLineControl [
         /// Mode the UART works in
         DATA_SIZE OFFSET(0) NUMBITS(2) [
             SevenBit = 0b00,
             EightBit = 0b11
         ]
     ],
-    MiniUartModemControl [
+    pub MiniUartModemControl [
         /// If clear the UART1_RTS line is high
         /// If set the UART1_RTS line is low
         /// This bit is ignored if the RTS is used for auto-flow
@@ -96,7 +96,7 @@ register_bitfields! {
         /// description
         RTS OFFSET(1) NUMBITS(1) []
     ],
-    MiniUartLineStatus [
+    pub MiniUartLineStatus [
         /// This bit is set if the transmit FIFO can accept at least
         /// one byte.
         TX_EMPTY OFFSET(5) NUMBITS(1) [],
@@ -105,19 +105,19 @@ register_bitfields! {
         /// symbol.
         DATA_READY OFFSET(0) NUMBITS(1) []
     ],
-    MiniUartModemStatus [
+    pub MiniUartModemStatus [
         /// This bit is the inverse of the UART1_CTS input
         /// Thus:
         /// - If set the UART1_CTS pin is low
         /// - If clear the UART1_CTS pin is high
         CTS_STATUS OFFSET(5) NUMBITS(1) []
     ],
-    MiniUartScratch [
+    pub MiniUartScratch [
         /// One whole byte extra on top of the 134217728 provided by
         /// the SDC
         SCRATCH OFFSET(0) NUMBITS(8) []
     ],
-    MiniUartExtraControl [
+    pub MiniUartExtraControl [
         /// If this bit is set the mini UART transmitter is enabled.
         /// If this bit is clear the mini UART transmitter is disabled.
         TX_EN OFFSET(1) NUMBITS(1) [
@@ -132,7 +132,7 @@ register_bitfields! {
             Disabled = 0
         ]
     ],
-    MiniUartExtraStatus [
+    pub MiniUartExtraStatus [
         /// These bits shows how many symbols are stored in the
         /// transmit FIFO
         /// The value is in the range 0-8
@@ -177,7 +177,7 @@ register_bitfields! {
         SYMBOL_AVAILABLE OFFSET(0) NUMBITS(1) []
     ],
     /// Mini Uart Baudrate
-    MiniUartBaudrate [
+    pub MiniUartBaudrate [
         /// Mini UART baudrate counter
         RATE OFFSET(0) NUMBITS(16) []
     ]

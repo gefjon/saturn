@@ -2,12 +2,9 @@
 #![no_std]
 #![no_main]
 #![feature(
-    asm,
-    try_from,
+    llvm_asm,
     naked_functions,
     panic_info_message,
-    align_offset,
-    alloc,
     alloc_error_handler
 )]
 
@@ -32,8 +29,6 @@ mod gpio;
 mod uart;
 mod cores;
 
-use alloc::boxed::Box;
-
 use register::cpu::RegisterReadOnly;
 
 #[panic_handler]
@@ -55,7 +50,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 
 fn sleep_forever() -> ! {
     loop {
-        unsafe { asm!("wfe" :::: "volatile") }
+        unsafe { llvm_asm!("wfe" :::: "volatile") }
     }
 }
 
