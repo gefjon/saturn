@@ -81,16 +81,7 @@ dependencies = [
  "lazy_static",
  "r0",
  "register",
- "saturn_tagging",
  "spin 0.7.0",
-]
-
-[[package]]
-name = "saturn_tagging"
-version = "0.2.1"
-source = "git+https://github.com/gefjon/saturn_tagging#2b00b653fd07248c4b58a3e084c6c8c7250e68f5"
-dependencies = [
- "failure",
 ]
 
 [[package]]

@@ -2,7 +2,7 @@ TARGET ?= aarch64-unknown-none
 KERNEL ?= kernel8
 KERNEL_IMAGE ?= $(KERNEL).img
 
-OBJCOPY ?= objcopy
+OBJCOPY ?= llvm-objcopy
 OBJCOPY_PARAMS ?= --strip-all -O binary
 
 OBJDUMP ?= cargo objdump --target $(TARGET) --
@@ -35,7 +35,7 @@ $(KERNEL_IMAGE): $(KERNEL)
 	$(OBJCOPY) $(OBJCOPY_PARAMS) $< $@
 
 emu: $(KERNEL_IMAGE)
-	$(QEMU) $(QEMU_PARAMS) -kernel $< -serial null -serial stdio
+	$(QEMU) $(QEMU_PARAMS) -kernel $< -display none -serial null -serial stdio
 
 asm: $(BUILD_DEPENDS)
 	cargo xrustc --target=$(TARGET) --release -- --emit=asm
