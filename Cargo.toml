@@ -19,12 +19,3 @@ cortex-a = "3.0"
 r0 = "1.0"
 register = "0.5"
 spin = "0.7"
-
-[dependencies.failure]
-version = "0.1"
-default_features = false # no `std`
-features = ["derive"]
-
-[dependencies.lazy_static]
-version = "1.2.0"
-features = ["spin_no_std"]
