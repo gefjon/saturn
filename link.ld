@@ -4,8 +4,8 @@ SECTIONS
     __text_start = .;
     .text :
     {
+      KEEP(*(.text.boot.el2_entry))
       KEEP(*(.text.boot))
-      KEEP(*(.text.boot.*))
       *(.text .text.*)
     }
 
