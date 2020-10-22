@@ -10,11 +10,11 @@ pub fn block(cycles: u32) {
 }
 
 macro_rules! define_barrier_insn {
-    ($(#[$m:meta])* $fname:ident $insn:expr) => {
+    ($(#[$m:meta])* $insn:ident $fname:ident) => {
         $(#[$m])*
         #[inline(always)]
         pub fn $fname() { unsafe {
-            asm!($insn, options(nomem, nostack));
+            asm!(concat!(stringify!($insn), " ", stringify!($fname)), options(nomem, nostack));
         } }
     };
 }
@@ -27,77 +27,77 @@ macro_rules! define_barrier {
                 /// writes are the required access types, both before and after
                 /// the barrier instruction. This option is referred to as the
                 /// full system barrier.
-                sy concat!(stringify!($insn), " sy")
+                $insn sy
             );
             define_barrier_insn!(
                 /// Full system is the required shareability domain, writes
                 /// are the required access type, both before and after the
                 /// barrier instruction.
-                st concat!(stringify!($insn), " st")
+                $insn st
             );
             define_barrier_insn!(
                 /// Full system is the required shareability domain, reads are
                 /// the required access type before the barrier instruction,
                 /// and reads and writes are the required access types after
                 /// the barrier instruction.
-                ld concat!(stringify!($insn), " ld")
+                $insn ld
             );
             define_barrier_insn!(
                 /// Inner Shareable is the required shareability domain, reads
                 /// and writes are the required access types, both before and
                 /// after the barrier instruction.
-                ish concat!(stringify!($insn), " ish")
+                $insn ish
             );
             define_barrier_insn!(
                 /// Inner Shareable is the required shareability domain,
                 /// writes are the required access type, both before and after
                 /// the barrier instruction.
-                ishst concat!(stringify!($insn), " ishst")
+                $insn ishst
             );
             define_barrier_insn!(
                 /// Inner Shareable is the required shareability domain, reads
                 /// are the required access type before the barrier
                 /// instruction, and reads and writes are the required access
                 /// types after the barrier instruction.
-                ishld concat!(stringify!($insn), " ishld")
+                $insn ishld
             );
             define_barrier_insn!(
                 /// Non-shareable is the required shareability domain, reads
                 /// and writes are the required access, both before and after
                 /// the barrier instruction.
-                nsh concat!(stringify!($insn), " nsh")
+                $insn nsh
             );
             define_barrier_insn!(
                 /// Non-shareable is the required shareability domain, writes
                 /// are the required access type, both before and after the
                 /// barrier instruction.
-                nshst concat!(stringify!($insn), " nshst")
+                $insn nshst
             );
             define_barrier_insn!(
                 /// Non-shareable is the required shareability domain, reads
                 /// are the required access type before the barrier
                 /// instruction, and reads and writes are the required access
                 /// types after the barrier instruction.
-                nshld concat!(stringify!($insn), " nshld")
+                $insn nshld
             );
             define_barrier_insn!(
                 /// Outer Shareable is the required shareability domain, reads
                 /// and writes are the required access types, both before and
                 /// after the barrier instruction.
-                osh concat!(stringify!($insn), " osh")
+                $insn osh
             );
             define_barrier_insn!(
                 /// Outer Shareable is the required shareability domain,
                 /// writes are the required access type, both before and after
                 /// the barrier instruction.
-                oshst concat!(stringify!($insn), " oshst")
+                $insn oshst
             );
             define_barrier_insn!(
                 /// Outer Shareable is the required shareability domain, reads
                 /// are the required access type before the barrier
                 /// instruction, and reads and writes are the required access
                 /// types after the barrier instruction.
-                oshld concat!(stringify!($insn), " oshld")
+                $insn oshld
             );
         }
     }
