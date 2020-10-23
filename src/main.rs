@@ -11,16 +11,18 @@
 const MMIO_BASE: u32 = 0x3F00_0000;
 
 mod asm;
-mod boot;
+pub mod boot;
 mod console;
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     {
         use core::fmt::Write;
-        let _ = console::print_str("\nKernel panic\n");
+        unsafe {
+            console::force_unlock_console();
+        }
         let mut c = console::lock_console();
-        let _ = c.write_str("\nKernel panic\n");
+        let _ = c.write_str("\nKernel panic");
         if let Some(msg) = info.message() {
             let _ = c.write_fmt(format_args!(": {}", msg));
         }
@@ -39,11 +41,10 @@ fn sleep_forever() -> ! {
 }
 
 fn core_0_main() -> ! {
-    let _ = console::print_str("Hello from a print_str call!\n");
-    let _ = console::print_str("Hello from another print_str call!\n");
-    let name = "you nerd!";
-    let _ = console::print(format_args!("This string is being formatted, {}", name));
-    let _ = console::print_str("Hello from after a format_args!\n");
+    let _ = console::print_str("Hello from a print_str call!\n")
+        .expect("print_str failed");
+
     println!("Hello from a println call, {}", "Phoebe");
+
     panic!("Check out this panic message!");
 }

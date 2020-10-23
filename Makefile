@@ -1,4 +1,4 @@
-TARGET ?= aarch64-unknown-none
+TARGET ?= aarch64-unknown-none-softfloat
 KERNEL ?= kernel8
 KERNEL_IMAGE ?= $(KERNEL).img
 
@@ -11,22 +11,36 @@ OBJDUMP_PARAMS ?= -disassemble -print-imm-hex
 QEMU ?= qemu-system-aarch64
 QEMU_PARAMS ?= -M raspi3
 
-BUILD_DEPENDS=$(wildcard **/*.rs) Cargo.toml link.ld
+RELEASE_BIN = target/$(TARGET)/release/$(KERNEL)
+DEBUG_BIN = target/$(TARGET)/debug/$(KERNEL)
 
-.PHONY: build emu clean debug objdump clippy doc
-build: $(KERNEL_IMAGE)
+RELEASE_IMG = target/$(TARGET)/release/$(KERNEL_IMAGE)
+DEBUG_IMG = target/$(TARGET)/debug/$(KERNEL_IMAGE)
+
+LINKER_SCRIPT = link.ld
+
+BUILD_DEPENDS = $(wildcard **/*.rs) Cargo.toml $(LINKER_SCRIPT)
+
+RUSTFLAGS = -C link-arg=-T$(LINKER_SCRIPT)
+
+%.img: %
+	$(OBJCOPY) $(OBJCOPY_PARAMS) $< $@
+
+.PHONY: build release emu emu_debug clean debug gdb clippy doc
+build: release
 
 clean:
 	cargo clean
-	rm -f kernel8 kernel8.img
+	rm -f $(RELEASE_BIN) $(RELEASE_IMG) $(DEBUG_BIN) $(DEBUG_IMG)
 
-debug: target/$(TARGET)/debug/$(KERNEL)
+release: $(RELEASE_IMG)
+debug: $(DEBUG_IMG)
 
-target/$(TARGET)/debug/$(KERNEL): $(BUILD_DEPENDS)
-	cargo xbuild --target=$(TARGET)
+$(DEBUG_BIN): $(BUILD_DEPENDS)
+	RUSTFLAGS="$(RUSTFLAGS)" cargo rustc --target=$(TARGET)
 
-target/$(TARGET)/release/$(KERNEL): $(BUILD_DEPENDS)
-	cargo xbuild --target=$(TARGET) --release
+$(RELEASE_BIN): $(BUILD_DEPENDS)
+	RUSTFLAGS="$(RUSTFLAGS)" cargo rustc --target=$(TARGET) --release
 
 $(KERNEL): target/$(TARGET)/release/$(KERNEL)
 	cp $< $@
@@ -34,17 +48,19 @@ $(KERNEL): target/$(TARGET)/release/$(KERNEL)
 $(KERNEL_IMAGE): $(KERNEL)
 	$(OBJCOPY) $(OBJCOPY_PARAMS) $< $@
 
-emu: $(KERNEL_IMAGE)
+emu: $(RELEASE_IMG)
 	$(QEMU) $(QEMU_PARAMS) -kernel $< -display none -serial stdio
 
-asm: $(BUILD_DEPENDS)
-	cargo xrustc --target=$(TARGET) --release -- --emit=asm
+emu_debug: $(DEBUG_IMG)
+	$(QEMU) $(QEMU_PARAMS) -kernel $< -display none -serial stdio
 
-doc: $(wildcard **/*.rs) Cargo.toml
+gdb: $(DEBUG_IMG)
+	gdb \
+	-ex "target remote | $(QEMU) $(QEMU_PARAMS) -kernel $< -S -gdb stdio -display none" \
+	-ex "add-symbol-file $(DEBUG_BIN)"
+
+doc: $(BUILD_DEPENDS)
 	cargo doc --target=$(TARGET) --document-private-items
 
-objdump: $(KERNEL)
-	$(OBJDUMP) $(OBJDUMP_PARAMS) $<
-
-clippy: $(wildcard src/**.rs)
+clippy: $(BUILD_DEPENDS)
 	cargo xclippy --target=$(TARGET)

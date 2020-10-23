@@ -31,6 +31,12 @@ pub fn lock_console() -> MutexGuard<'static, impl Write> {
     CONSOLE.lock()
 }
 
+pub unsafe fn force_unlock_console() {
+    if CONSOLE.is_locked() {
+        CONSOLE.force_unlock();
+    }
+}
+
 pub fn print_str(s: &str) -> Result {
     lock_console().write_str(s)
 }
