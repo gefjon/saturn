@@ -1,16 +1,4 @@
-use crate::{asm::dsb, core_0_main, sleep_forever};
-
-// These are all defined in `/link.ld`
-extern "C" {
-    static __text_start: u64;
-
-    static mut __bss_start: u64;
-    static mut __bss_end: u64;
-
-    static mut __data_start: u64;
-    static mut __data_end: u64;
-    static __data_loadaddr: u64;
-}
+use crate::{core_0_main, memory, sleep_forever};
 
 #[link_section = ".text.boot.el2_entry"]
 #[no_mangle]
@@ -22,9 +10,12 @@ pub unsafe extern "C" fn _el2_entry() -> ! {
         "mrs x8, mpidr_el1",
         "tst x8, #3",
         "b.ne {sleep_forever}",
+        // set_stack_pointer takes a continuation as its first argument
+        "adr x0, {el1_entry}",
         "b {set_stack_pointer}",
 
         sleep_forever = sym sleep_forever,
+        el1_entry = sym el1_entry,
         set_stack_pointer = sym set_stack_pointer,
 
         options(nomem, nostack, noreturn),
@@ -33,14 +24,15 @@ pub unsafe extern "C" fn _el2_entry() -> ! {
 
 #[link_section = ".text.boot"]
 #[naked]
-unsafe fn set_stack_pointer() -> ! {
+unsafe extern "C" fn set_stack_pointer(_entry: extern "C" fn() -> !) -> ! {
+    // arg is in x0, passed untouched to later fns
     asm!(
         // set the stack pointer to just before the beginning of the code section
         "adr x8, {text_start}",
         "msr sp_el1, x8",
         "b {become_el1}",
 
-        text_start = sym __text_start,
+        text_start = sym memory::__text_start,
         become_el1 = sym become_el1,
 
         options(nomem, nostack, noreturn),
@@ -49,16 +41,16 @@ unsafe fn set_stack_pointer() -> ! {
 
 #[link_section = ".text.boot"]
 #[naked]
-unsafe fn become_el1() ->! {
+unsafe extern "C" fn become_el1(_entry: extern "C" fn() -> !) ->! {
+    // arg is in x0
     asm!(
-        // if we're already in el1, go to el1_entry
+        // if we're in el1, go to el2_lower_to_el1.
         "mrs x8, currentel",
         "cmp w8, #0x8",
-        "b.ne {el1_entry}",
-        // otherwise, we're in el2. change that.
-        "b {el2_lower_to_el1}",
-
-        el1_entry = sym el1_entry,
+        "b.eq {el2_lower_to_el1}",
+        // otherwise, we're already in el1. jump to _entry.
+        "br x0",
+        
         el2_lower_to_el1 = sym el2_lower_to_el1,
 
         options(nomem, nostack, noreturn),
@@ -68,7 +60,8 @@ unsafe fn become_el1() ->! {
 #[link_section = ".text.boot"]
 #[naked]
 /// construct an exception from which to return, then return from it into el1
-unsafe fn el2_lower_to_el1() -> ! {
+unsafe extern "C" fn el2_lower_to_el1(_entry: extern "C" fn() -> !) -> ! {
+    // arg is in x0
     asm!(
         // set hcr_el2 so that el1 runs in aarch64 mode
         "mov w8, #-0x80000000",
@@ -76,12 +69,9 @@ unsafe fn el2_lower_to_el1() -> ! {
         // set spsr_el2 to disable interrupts and to resume into aarch64 mode
         "mov w9, #0x345",
         "msr spsr_el2, x9",
-        // set the exception resume address to el1_entry
-        "adr x10, {el1_entry}",
-        "msr elr_el2, x10",
+        // set the exception resume address to the argument
+        "msr elr_el2, x0",
         "eret",
-
-        el1_entry = sym el1_entry,
 
         options(nomem, nostack, noreturn),
     )
@@ -89,9 +79,7 @@ unsafe fn el2_lower_to_el1() -> ! {
 
 #[link_section = ".text.boot"]
 #[naked]
-unsafe fn el1_entry() ->! {
-    r0::zero_bss(&mut __bss_start, &mut __bss_end);
-    r0::init_data(&mut __data_start, &mut __data_end, &__data_loadaddr);
-    dsb::sy();
+unsafe extern "C" fn el1_entry() ->! {
+    memory::init_data();
     core_0_main()
 }

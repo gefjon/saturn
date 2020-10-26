@@ -32,5 +32,7 @@ SECTIONS
         __bss_end = .;
     }
 
+    __kernel_end = .;
+
     /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }

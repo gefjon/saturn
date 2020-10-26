@@ -6,32 +6,35 @@
     naked_functions,
     format_args_nl,
     panic_info_message,
+    const_in_array_repeat_expressions,
 )]
 
-const MMIO_BASE: u32 = 0x3F00_0000;
-
 mod asm;
-pub mod boot;
+mod boot;
 mod console;
+mod memory;
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
-    {
-        use core::fmt::Write;
-        unsafe {
-            console::force_unlock_console();
-        }
-        let mut c = console::lock_console();
-        let _ = c.write_str("\nKernel panic");
-        if let Some(msg) = info.message() {
-            let _ = c.write_fmt(format_args!(": {}", msg));
-        }
-        if let Some(loc) = info.location() {
-            let _ = c.write_fmt(format_args!("\n\tin file '{}' at line {}, column {}",
-                                             loc.file(), loc.line(), loc.column()));
-        }
-        let _ = c.write_str("\n");
+    unsafe {
+        console::force_unlock_console();
     }
+
+    let _ = console::with_console(|c| {
+        c.write_str("\nKernel panic")?;
+
+        if let Some(msg) = info.message() {
+            c.write_fmt(format_args!(": {}", msg))?;
+        }
+
+        if let Some(loc) = info.location() {
+            c.write_fmt(format_args!("\n\tin file '{}' at line {}, column {}",
+                                     loc.file(), loc.line(), loc.column()))?;
+        }
+
+        c.write_str("\n")
+    });
+
     sleep_forever()
 }
 
