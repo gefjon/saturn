@@ -42,12 +42,6 @@ $(DEBUG_BIN): $(BUILD_DEPENDS)
 $(RELEASE_BIN): $(BUILD_DEPENDS)
 	RUSTFLAGS="$(RUSTFLAGS)" cargo rustc --target=$(TARGET) --release
 
-$(KERNEL): target/$(TARGET)/release/$(KERNEL)
-	cp $< $@
-
-$(KERNEL_IMAGE): $(KERNEL)
-	$(OBJCOPY) $(OBJCOPY_PARAMS) $< $@
-
 emu: $(RELEASE_IMG)
 	$(QEMU) $(QEMU_PARAMS) -kernel $< -display none -serial stdio
 
