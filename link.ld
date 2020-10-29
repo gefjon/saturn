@@ -32,6 +32,7 @@ SECTIONS
         __bss_end = .;
     }
 
+    . = ALIGN(4096);
     __kernel_end = .;
 
     /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }

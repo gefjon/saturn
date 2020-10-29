@@ -109,10 +109,13 @@ impl PageInfo {
     }
 }
 
+/// returns the first address not occupied by the kernel. the linker
+/// script ensures this will be 4096-byte (aka page) aligned
 fn kernel_end_addr() -> usize { unsafe {
-    (&__data_end) as *const u64 as usize
+    (&__kernel_end) as *const u64 as usize
 } }
 
+/// returns the index of the first page not occupied by the kernel
 fn kernel_end_page_idx() -> usize {
     kernel_end_addr() / PAGE_SIZE
 }
