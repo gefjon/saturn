@@ -1,3 +1,5 @@
+BOARD ?= qemu
+
 TARGET ?= aarch64-unknown-none-softfloat
 KERNEL ?= kernel8
 KERNEL_IMAGE ?= $(KERNEL).img
@@ -17,11 +19,14 @@ DEBUG_BIN = target/$(TARGET)/debug/$(KERNEL)
 RELEASE_IMG = target/$(TARGET)/release/$(KERNEL_IMAGE)
 DEBUG_IMG = target/$(TARGET)/debug/$(KERNEL_IMAGE)
 
+BOARD_LINK_VARS = board_link_vars.ld
+
 LINKER_SCRIPT = link.ld
 
-BUILD_DEPENDS = $(wildcard **/*.rs) Cargo.toml $(LINKER_SCRIPT)
+BUILD_DEPENDS = $(wildcard **/*.rs) Cargo.toml $(LINKER_SCRIPT) $(BOARD_LINK_VARS)
 
 RUSTFLAGS = -C link-arg=-T$(LINKER_SCRIPT)
+RUSTC_ARGS = --target=$(TARGET) --features=$(BOARD)
 
 %.img: %
 	$(OBJCOPY) $(OBJCOPY_PARAMS) $< $@
@@ -29,18 +34,21 @@ RUSTFLAGS = -C link-arg=-T$(LINKER_SCRIPT)
 .PHONY: build release emu emu_debug clean debug gdb clippy doc
 build: release
 
+$(BOARD_LINK_VARS): src/board/$(BOARD)/link.ld
+	cp $< $@
+
 clean:
 	cargo clean
-	rm -f $(RELEASE_BIN) $(RELEASE_IMG) $(DEBUG_BIN) $(DEBUG_IMG)
+	rm -f $(RELEASE_BIN) $(RELEASE_IMG) $(DEBUG_BIN) $(DEBUG_IMG) $(BOARD_LINK_VARS)
 
 release: $(RELEASE_IMG)
 debug: $(DEBUG_IMG)
 
 $(DEBUG_BIN): $(BUILD_DEPENDS)
-	RUSTFLAGS="$(RUSTFLAGS)" cargo rustc --target=$(TARGET)
+	RUSTFLAGS="$(RUSTFLAGS)" cargo rustc $(RUSTC_ARGS)
 
 $(RELEASE_BIN): $(BUILD_DEPENDS)
-	RUSTFLAGS="$(RUSTFLAGS)" cargo rustc --target=$(TARGET) --release
+	RUSTFLAGS="$(RUSTFLAGS)" cargo rustc $(RUSTC_ARGS) --release
 
 emu: $(RELEASE_IMG)
 	$(QEMU) $(QEMU_PARAMS) -kernel $< -display none -serial stdio

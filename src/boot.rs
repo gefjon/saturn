@@ -1,4 +1,4 @@
-use crate::{core_0_main, memory, sleep_forever};
+use crate::{console, core_0_main, memory, sleep_forever};
 
 #[link_section = ".text.boot.el2_entry"]
 #[no_mangle]
@@ -8,8 +8,13 @@ pub unsafe extern "C" fn _el2_entry() -> ! {
         // if this core0, go through the initialization routine. if
         // it's another core, sleep_forever.
         "mrs x8, mpidr_el1",
-        "tst x8, #3",
+        // this tst examines aff0
+        "tst x8, #0xff",
         "b.ne {sleep_forever}",
+        // this tst examines aff1
+        "tst x8, #0xff00",
+        "b.ne {sleep_forever}",
+        // todo: care about aff2 & aff3?
         // set_stack_pointer takes a continuation as its first argument
         "adr x0, {el1_entry}",
         "b {set_stack_pointer}",
@@ -81,5 +86,6 @@ unsafe extern "C" fn el2_lower_to_el1(_entry: extern "C" fn() -> !) -> ! {
 #[naked]
 unsafe extern "C" fn el1_entry() ->! {
     memory::init_data();
+    console::init_console();
     core_0_main()
 }

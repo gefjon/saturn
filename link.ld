@@ -1,7 +1,8 @@
+INCLUDE board_link_vars.ld
+
 SECTIONS
 {
-    . = 0x80000;
-    __text_start = .;
+    . = __text_start;
     .text :
     {
       KEEP(*(.text.boot.el2_entry))
@@ -37,3 +38,4 @@ SECTIONS
 
     /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
+

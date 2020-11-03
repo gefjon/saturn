@@ -9,6 +9,10 @@
     const_in_array_repeat_expressions,
 )]
 
+#[cfg(feature = "qemu")]
+#[path = "board/qemu/mod.rs"]
+mod board;
+
 mod asm;
 mod boot;
 mod console;

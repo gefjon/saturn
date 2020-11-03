@@ -8,6 +8,8 @@ edition = "2018"
 name = "kernel8"
 path = "src/main.rs"
 
+[features]
+qemu = []
 [profile.dev]
 panic = "abort"
 
