@@ -1,3 +1,4 @@
+# `rockpro64` is the other acceptable setting
 BOARD ?= qemu
 
 TARGET ?= aarch64-unknown-none-softfloat

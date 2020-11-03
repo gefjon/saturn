@@ -13,6 +13,10 @@
 #[path = "board/qemu/mod.rs"]
 mod board;
 
+#[cfg(feature = "rockpro64")]
+#[path = "board/rockpro64/mod.rs"]
+mod board;
+
 mod asm;
 mod boot;
 mod console;
