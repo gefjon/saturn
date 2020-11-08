@@ -1,4 +1,3 @@
-# `rockpro64` is the other acceptable setting
 BOARD ?= qemu
 
 TARGET ?= aarch64-unknown-none-softfloat
@@ -12,7 +11,7 @@ OBJDUMP ?= llvm-objdump
 OBJDUMP_PARAMS ?= -disassemble -print-imm-hex
 
 QEMU ?= qemu-system-aarch64
-QEMU_PARAMS ?= -M raspi3
+QEMU_PARAMS ?= -machine virt -cpu cortex-a53 -m 4G
 
 RELEASE_BIN = target/$(TARGET)/release/$(KERNEL)
 DEBUG_BIN = target/$(TARGET)/debug/$(KERNEL)
@@ -32,7 +31,7 @@ RUSTC_ARGS = --target=$(TARGET) --features=$(BOARD)
 %.img: %
 	$(OBJCOPY) $(OBJCOPY_PARAMS) $< $@
 
-.PHONY: build release emu emu_debug clean debug gdb clippy doc
+.PHONY: build release emu emu_debug clean debug gdb clippy doc expand
 build: release
 
 $(BOARD_LINK_VARS): src/board/$(BOARD)/link.ld
@@ -57,7 +56,7 @@ emu: $(RELEASE_IMG)
 emu_debug: $(DEBUG_IMG)
 	$(QEMU) $(QEMU_PARAMS) -kernel $< -display none -serial stdio
 
-gdb: $(DEBUG_IMG)
+gdb: $(DEBUG_BIN)
 	gdb \
 	-ex "target remote | $(QEMU) $(QEMU_PARAMS) -kernel $< -S -gdb stdio -display none" \
 	-ex "add-symbol-file $(DEBUG_BIN)"
@@ -67,3 +66,6 @@ doc: $(BUILD_DEPENDS)
 
 clippy: $(BUILD_DEPENDS)
 	cargo xclippy --target=$(TARGET)
+
+expand: $(BUILD_DEPENDS)
+	RUSTFLAGS="$(RUSTFLAGS)" cargo expand

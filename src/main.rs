@@ -20,6 +20,7 @@ mod board;
 mod asm;
 mod boot;
 mod console;
+mod driver;
 mod memory;
 
 #[panic_handler]

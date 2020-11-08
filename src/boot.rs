@@ -15,33 +15,16 @@ pub unsafe extern "C" fn _el2_entry() -> ! {
         "tst x8, #0xff00",
         "b.ne {sleep_forever}",
         // todo: care about aff2 & aff3?
-        // set_stack_pointer takes a continuation as its first argument
+        // become_el1 takes a continuation as its first argument
         "adr x0, {el1_entry}",
-        "b {set_stack_pointer}",
+        "b {become_el1}",
 
         sleep_forever = sym sleep_forever,
         el1_entry = sym el1_entry,
-        set_stack_pointer = sym set_stack_pointer,
-
-        options(nomem, nostack, noreturn),
-    );
-}
-
-#[link_section = ".text.boot"]
-#[naked]
-unsafe extern "C" fn set_stack_pointer(_entry: extern "C" fn() -> !) -> ! {
-    // arg is in x0, passed untouched to later fns
-    asm!(
-        // set the stack pointer to just before the beginning of the code section
-        "adr x8, {text_start}",
-        "msr sp_el1, x8",
-        "b {become_el1}",
-
-        text_start = sym memory::__text_start,
         become_el1 = sym become_el1,
 
         options(nomem, nostack, noreturn),
-    )
+    );
 }
 
 #[link_section = ".text.boot"]
@@ -84,7 +67,22 @@ unsafe extern "C" fn el2_lower_to_el1(_entry: extern "C" fn() -> !) -> ! {
 
 #[link_section = ".text.boot"]
 #[naked]
-unsafe extern "C" fn el1_entry() ->! {
+unsafe extern "C" fn el1_entry() -> ! {
+    asm!(
+        // use sp_elx at elx
+        "msr spsel, #1",
+
+        // set the stack pointer to just before the beginning of the code section
+        "adr {scratch}, {text_start}",
+        "mov sp, {scratch}",
+        
+        text_start = sym memory::__text_start,
+        
+        scratch = out(reg) _,
+        
+        options(nomem, nostack),
+    );
+
     memory::init_data();
     console::init_console();
     core_0_main()

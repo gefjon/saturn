@@ -11,6 +11,7 @@ path = "src/main.rs"
 [features]
 qemu = []
 rockpro64 = []
+default = ["qemu"]
 
 [profile.dev]
 panic = "abort"
