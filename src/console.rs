@@ -1,6 +1,19 @@
 use core::fmt::{self, Write, Arguments};
+use spin::MutexGuard;
 
-pub use crate::board::console::{lock_console, force_unlock_console, init_console};
+pub use crate::board::console::CONSOLE;
+
+pub fn lock_console() -> MutexGuard<'static, impl Write> {
+    CONSOLE.lock()
+}
+
+pub unsafe fn force_unlock_console() {
+    if CONSOLE.is_locked() {
+        CONSOLE.force_unlock();
+    }
+}
+
+pub unsafe fn init_console() {}
 
 pub fn with_console<F, R>(f: F) -> Result<R, fmt::Error>
 where

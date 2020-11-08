@@ -9,7 +9,10 @@ name = "kernel8"
 path = "src/main.rs"
 
 [features]
-qemu = []
+virt = []
+rockpro64 = []
+raspi3 = []
+
 [profile.dev]
 panic = "abort"
 

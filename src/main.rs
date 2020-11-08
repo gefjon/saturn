@@ -9,13 +9,22 @@
     const_in_array_repeat_expressions,
 )]
 
-#[cfg(feature = "qemu")]
-#[path = "board/qemu/mod.rs"]
+#[cfg(feature = "virt")]
+#[path = "board/virt/mod.rs"]
+mod board;
+
+#[cfg(feature = "rockpro64")]
+#[path = "board/rockpro64/mod.rs"]
+mod board;
+
+#[cfg(feature = "raspi3")]
+#[path = "board/raspi3/mod.rs"]
 mod board;
 
 mod asm;
 mod boot;
 mod console;
+mod driver;
 mod memory;
 
 #[panic_handler]
@@ -48,10 +57,10 @@ fn sleep_forever() -> ! {
 }
 
 fn core_0_main() -> ! {
-    let _ = console::print_str("Hello from a print_str call!\n")
+    console::print_str("Hello from a print_str call!\n")
         .expect("print_str failed");
 
     println!("Hello from a println call, {}", "Phoebe");
-
+    
     panic!("Check out this panic message!");
 }
