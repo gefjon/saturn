@@ -1,4 +1,4 @@
-BOARD ?= qemu
+BOARD ?= raspi3
 
 TARGET ?= aarch64-unknown-none-softfloat
 KERNEL ?= kernel8
@@ -11,7 +11,7 @@ OBJDUMP ?= llvm-objdump
 OBJDUMP_PARAMS ?= -disassemble -print-imm-hex
 
 QEMU ?= qemu-system-aarch64
-QEMU_PARAMS ?= -machine virt -cpu cortex-a53 -m 4G
+QEMU_PARAMS ?= -machine $(BOARD) -cpu cortex-a53 -m 1G
 
 RELEASE_BIN = target/$(TARGET)/release/$(KERNEL)
 DEBUG_BIN = target/$(TARGET)/debug/$(KERNEL)
@@ -58,7 +58,7 @@ emu_debug: $(DEBUG_IMG)
 
 gdb: $(DEBUG_BIN)
 	gdb \
-	-ex "target remote | $(QEMU) $(QEMU_PARAMS) -kernel $< -S -gdb stdio -display none" \
+	-ex "target remote | $(QEMU) $(QEMU_PARAMS) -kernel $< -S -gdb stdio -display none -serial file:serial.out" \
 	-ex "add-symbol-file $(DEBUG_BIN)"
 
 doc: $(BUILD_DEPENDS)
