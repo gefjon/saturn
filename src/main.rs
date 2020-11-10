@@ -1,4 +1,3 @@
-#![cfg(target_arch = "aarch64")]
 #![no_std]
 #![no_main]
 #![feature(
@@ -7,6 +6,10 @@
     format_args_nl,
     panic_info_message,
     const_in_array_repeat_expressions,
+    const_fn,
+    const_raw_ptr_to_usize_cast,
+    int_bits_const,
+    maybe_uninit_extra,
 )]
 
 #[cfg(feature = "virt")]

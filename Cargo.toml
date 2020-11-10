@@ -24,3 +24,7 @@ cortex-a = "3.0"
 r0 = "1.0"
 register = "0.5"
 spin = "0.7"
+
+[dependencies.num_enum]
+version = "0.5"
+default-features = false
