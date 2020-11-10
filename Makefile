@@ -23,7 +23,7 @@ BOARD_LINK_VARS = board_link_vars.ld
 
 LINKER_SCRIPT = link.ld
 
-BUILD_DEPENDS = $(wildcard **/*.rs) Cargo.toml $(LINKER_SCRIPT) $(BOARD_LINK_VARS)
+BUILD_DEPENDS := $(shell find src -name '*.rs') Cargo.toml $(LINKER_SCRIPT) $(BOARD_LINK_VARS)
 
 RUSTFLAGS = -C link-arg=-T$(LINKER_SCRIPT)
 RUSTC_ARGS = --target=$(TARGET) --features=$(BOARD)
