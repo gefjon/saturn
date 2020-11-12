@@ -1,3 +1,6 @@
+OUTPUT_FORMAT(elf64-littleaarch64)
+ENTRY(_el2_entry)
+
 INCLUDE board_link_vars.ld
 
 SECTIONS

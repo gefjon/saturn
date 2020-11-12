@@ -1,7 +1,11 @@
 #![cfg(target_arch="aarch64")]
 #![allow(unused)]
 
-pub use cortex_a::asm::*;
+#[inline(always)]
+pub fn wfe() { unsafe { asm!("wfe", options(nomem, nostack)) } }
+
+#[inline(always)]
+pub fn nop() { unsafe { asm!("nop", options(nomem, nostack)) } }
 
 #[inline(always)]
 /// No-op for a repeat of `cycles`

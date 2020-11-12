@@ -1,4 +1,4 @@
-use spin::Mutex;
+use crate::sync::Mutex;
 use crate::driver::uart::Pl011;
 
 pub static CONSOLE: Mutex<Pl011> = Mutex::new(

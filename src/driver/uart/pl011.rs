@@ -45,6 +45,9 @@ unsafe impl Send for Pl011 {}
 impl Write for Pl011 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for b in s.bytes() {
+            if b == b'\n' {
+                self.write_byte(b'\r');
+            }
             self.write_byte(b);
         }
         Ok(())
@@ -52,6 +55,7 @@ impl Write for Pl011 {
 }
 
 impl Pl011 {
+    pub unsafe fn init(&mut self) { }
     fn can_write(&mut self) -> bool {
         !self.fr().is_set(FR::trans_fifo_full)
     }

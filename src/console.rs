@@ -1,19 +1,27 @@
 use core::fmt::{self, Write, Arguments};
-use spin::MutexGuard;
+use crate::sync::MutexGuard;
 
 pub use crate::board::console::CONSOLE;
 
+#[no_mangle]
+#[inline(never)]
 pub fn lock_console() -> MutexGuard<'static, impl Write> {
     CONSOLE.lock()
 }
 
+#[no_mangle]
+#[inline(never)]
 pub unsafe fn force_unlock_console() {
     if CONSOLE.is_locked() {
         CONSOLE.force_unlock();
     }
 }
 
-pub unsafe fn init_console() {}
+pub unsafe fn init_console() {
+    force_unlock_console();
+    let mut c = CONSOLE.lock();
+    c.init()
+}
 
 pub fn with_console<F, R>(f: F) -> Result<R, fmt::Error>
 where

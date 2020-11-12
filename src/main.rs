@@ -26,6 +26,7 @@ mod boot;
 mod console;
 mod driver;
 mod memory;
+mod sync;
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
@@ -52,8 +53,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 }
 
 fn sleep_forever() -> ! {
-    use cortex_a::asm::wfe;
-    loop { wfe(); }
+    loop { asm::wfe(); }
 }
 
 fn core_0_main() -> ! {

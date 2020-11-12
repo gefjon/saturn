@@ -4,10 +4,10 @@ TARGET ?= aarch64-unknown-none-softfloat
 KERNEL ?= kernel8
 KERNEL_IMAGE ?= $(KERNEL).img
 
-OBJCOPY ?= llvm-objcopy
+OBJCOPY ?= objcopy
 OBJCOPY_PARAMS ?= --strip-all -O binary
 
-OBJDUMP ?= llvm-objdump
+OBJDUMP ?= objdump
 OBJDUMP_PARAMS ?= -disassemble -print-imm-hex
 
 QEMU ?= qemu-system-aarch64
@@ -28,10 +28,12 @@ BUILD_DEPENDS = $(wildcard **/*.rs) Cargo.toml $(LINKER_SCRIPT) $(BOARD_LINK_VAR
 RUSTFLAGS = -C link-arg=-T$(LINKER_SCRIPT)
 RUSTC_ARGS = --target=$(TARGET) --features=$(BOARD)
 
+SD_DEV ?= /dev/mmcblk1p1
+
 %.img: %
 	$(OBJCOPY) $(OBJCOPY_PARAMS) $< $@
 
-.PHONY: build release emu emu_debug clean debug gdb clippy doc expand
+.PHONY: build release emu emu_debug clean debug gdb clippy doc expand sd
 build: release
 
 $(BOARD_LINK_VARS): src/board/$(BOARD)/link.ld
@@ -69,3 +71,9 @@ clippy: $(BUILD_DEPENDS)
 
 expand: $(BUILD_DEPENDS)
 	RUSTFLAGS="$(RUSTFLAGS)" cargo expand
+
+sd: $(RELEASE_BIN) $(RELEASE_IMG)
+	sudo mkdir -p /mnt/saturn
+	sudo mount $(SD_DEV) /mnt/saturn
+	sudo cp $^ /mnt/saturn
+	sudo umount /mnt/saturn

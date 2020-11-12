@@ -5,26 +5,50 @@ use crate::{console, core_0_main, memory, sleep_forever};
 #[naked]
 pub unsafe extern "C" fn _el2_entry() -> ! {
     asm!(
-        // if this core0, go through the initialization routine. if
-        // it's another core, sleep_forever.
         "mrs x8, mpidr_el1",
-        // this tst examines aff0
-        "tst x8, #0xff",
-        "b.ne {sleep_forever}",
-        // this tst examines aff1
-        "tst x8, #0xff00",
-        "b.ne {sleep_forever}",
-        // todo: care about aff2 & aff3?
+        
+        // bit 31 indicates a uniprocessor system
+        "tbnz x8, #30, {core0_highel_entry}",
+
+        // this examines aff0, aff1, and aff2, deciding we are core0
+        // if all are zero.
+        //
+        // FIXME: examine aff3?
+        "tst x8, #0xffffff",
+        "b.ne {coren_highel_entry}",
+        "b {core0_highel_entry}",
+
+        core0_highel_entry = sym core0_highel_entry,
+        coren_highel_entry = sym coren_highel_entry,
+        options(nostack, noreturn),
+    );
+}
+
+#[link_section = ".text.boot"]
+#[naked]
+unsafe extern "C" fn core0_highel_entry() -> ! {
+    asm!(
         // become_el1 takes a continuation as its first argument
-        "adr x0, {el1_entry}",
+        "adr x0, {set_sp}",
         "b {become_el1}",
 
-        sleep_forever = sym sleep_forever,
-        el1_entry = sym el1_entry,
+        set_sp = sym set_sp,
         become_el1 = sym become_el1,
 
-        options(nomem, nostack, noreturn),
+        options(nostack, noreturn),
     );
+}
+
+#[link_section = ".text.boot"]
+#[naked]
+unsafe extern "C" fn coren_highel_entry() -> ! {
+    asm!(
+        "b {sleep_forever}",
+
+        sleep_forever = sym sleep_forever,
+
+        options(nomem, nostack, noreturn),
+    )
 }
 
 #[link_section = ".text.boot"]
@@ -38,10 +62,10 @@ unsafe extern "C" fn become_el1(_entry: extern "C" fn() -> !) ->! {
         "b.eq {el2_lower_to_el1}",
         // otherwise, we're already in el1. jump to _entry.
         "br x0",
-        
+
         el2_lower_to_el1 = sym el2_lower_to_el1,
 
-        options(nomem, nostack, noreturn),
+        options(nostack, noreturn),
     )
 }
 
@@ -61,29 +85,36 @@ unsafe extern "C" fn el2_lower_to_el1(_entry: extern "C" fn() -> !) -> ! {
         "msr elr_el2, x0",
         "eret",
 
-        options(nomem, nostack, noreturn),
+        options(nostack, noreturn),
     )
 }
 
 #[link_section = ".text.boot"]
 #[naked]
-unsafe extern "C" fn el1_entry() -> ! {
+unsafe extern "C" fn set_sp() -> ! {
     asm!(
         // use sp_elx at elx
         "msr spsel, #1",
-
+        
         // set the stack pointer to just before the beginning of the code section
-        "adr {scratch}, {text_start}",
-        "mov sp, {scratch}",
-        
-        text_start = sym memory::__text_start,
-        
-        scratch = out(reg) _,
-        
-        options(nomem, nostack),
-    );
+        "adr x8, {text_start}",
+        "mov sp, x8",
 
+        "b {core0_el1_entry}",
+
+        text_start = sym memory::__text_start,
+        core0_el1_entry = sym core0_el1_entry,
+        
+        options(nostack, noreturn),
+    );
+}
+
+#[link_section = ".text.boot"]
+#[naked]
+unsafe extern "C" fn core0_el1_entry() -> !{
     memory::init_data();
+
     console::init_console();
+
     core_0_main()
 }

@@ -183,14 +183,18 @@ register_bitfields! {
         /// additional DMA handshaking signals are selected . Note
         /// that this bit is 'self-clearing'. It is not necessary to
         /// clear this bit.
-        xmit_fifo_reset OFFSET(2) NUMBITS(1) [],
+        xmit_fifo_reset OFFSET(2) NUMBITS(1) [
+            Reset = 1
+        ],
         /// RCVR FIFO Reset. This resets the control portion of the
         /// receive FIFO and treats the FIFO as empty. This also
         /// de-asserts the DMA RX request and single signals when
         /// additional DMA handshaking signals are selected. Note that
         /// this bit is 'self-clearing'. It is not necessary to clear
         /// this bit.
-        rcvr_fifo_reset OFFSET(1) NUMBITS(1) [],
+        rcvr_fifo_reset OFFSET(1) NUMBITS(1) [
+            Reset = 1
+        ],
         /// FIFO Enable. FIFO Enable. This enables/disables the
         /// transmit (XMIT) and receive (RCVR) FIFOs. Whenever the
         /// value of this bit is changed both the XMIT and RCVR
@@ -451,6 +455,9 @@ define_register_block! {
 impl Write for Pc16550d {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for b in s.bytes() {
+            if b == b'\n' {
+                self.write_byte(b'\r');
+            }
             self.write_byte(b);
         }
         Ok(())
@@ -460,10 +467,11 @@ impl Write for Pc16550d {
 unsafe impl Send for Pc16550d {}
 
 impl Pc16550d {
+    pub unsafe fn init(&mut self) {}
     fn can_write(&mut self) -> bool {
         self.lsr().matches_all(LSR::trans_hold_reg_empty::Empty)
     }
-    fn write_byte(&mut self, b: u8) {
+    pub fn write_byte(&mut self, b: u8) {
         block_until(|| self.can_write(), 1);
         self.thr().set(b);
     }
