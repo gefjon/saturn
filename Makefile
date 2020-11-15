@@ -8,7 +8,7 @@ OBJCOPY ?= objcopy
 OBJCOPY_PARAMS ?= --strip-all -O binary
 
 OBJDUMP ?= objdump
-OBJDUMP_PARAMS ?= -disassemble -print-imm-hex
+OBJDUMP_PARAMS ?= --disassemble
 
 QEMU ?= qemu-system-aarch64
 QEMU_PARAMS ?= -machine $(BOARD) -cpu cortex-a53 -m 1G
@@ -25,7 +25,7 @@ LINKER_SCRIPT = link.ld
 
 BUILD_DEPENDS = $(wildcard **/*.rs) Cargo.toml $(LINKER_SCRIPT) $(BOARD_LINK_VARS)
 
-RUSTFLAGS = -C link-arg=-T$(LINKER_SCRIPT)
+RUSTFLAGS = -C link-arg=-T$(LINKER_SCRIPT) -C no-redzone
 RUSTC_ARGS = --target=$(TARGET) --features=$(BOARD)
 
 SD_DEV ?= /dev/mmcblk1p1
@@ -77,3 +77,9 @@ sd: $(RELEASE_BIN) $(RELEASE_IMG)
 	sudo mount $(SD_DEV) /mnt/saturn
 	sudo cp $^ /mnt/saturn
 	sudo umount /mnt/saturn
+
+objdump: $(RELEASE_BIN)
+	$(OBJDUMP) $(OBJDUMP_PARAMS) $< > $@
+
+objdump_debug: $(DEBUG_BIN)
+	$(OBJDUMP) $(OBJDUMP_PARAMS) $< > $@

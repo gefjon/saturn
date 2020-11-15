@@ -4,3 +4,5 @@ kernel8
 kernel8.img
 board_link_vars.ld
 **/*.DS_Store
+objdump
+objdump_debug
