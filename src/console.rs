@@ -37,6 +37,10 @@ pub fn lock_console() -> MutexGuard<'static, impl Console> {
     CONSOLE.lock()
 }
 
+pub fn lock_writer() -> impl fmt::Write {
+    ConsoleWriter(lock_console())
+}
+
 pub unsafe fn force_unlock_console() {
     if CONSOLE.is_locked() {
         CONSOLE.force_unlock();
@@ -49,7 +53,7 @@ pub fn with_console<F, R>(f: F) -> Result<R, fmt::Error>
 where
     F: FnOnce(&mut dyn fmt::Write) -> Result<R, fmt::Error>,
 {
-    f(&mut ConsoleWriter(lock_console()))
+    f(&mut lock_writer())
 }
 
 pub fn print_str(s: &str) -> fmt::Result {
