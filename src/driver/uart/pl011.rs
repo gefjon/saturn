@@ -53,4 +53,10 @@ impl Console for Pl011 {
     fn can_write(&mut self) -> bool {
         !self.fr().is_set(FR::trans_fifo_full)
     }
+    unsafe fn unchecked_read_byte(&mut self) -> u8 {
+        self.dr().get() as u8
+    }
+    fn can_read(&mut self) -> bool {
+        !self.fr().is_set(FR::recv_fifo_empty)
+    }
 }

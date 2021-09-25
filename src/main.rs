@@ -33,7 +33,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
         console::force_unlock_console();
     }
 
-    let _ = console::with_console(|c| {
+    let _ = console::with_writing(|c| {
         c.write_str("\nKernel panic")?;
 
         if let Some(msg) = info.message() {
@@ -56,11 +56,22 @@ fn sleep_forever() -> ! {
     loop { wfe(); }
 }
 
+fn echo_loop() -> ! {
+    use crate::console::Console;
+    let mut c = console::lock_console();
+    loop {
+        let byte = c.blocking_read_byte();
+        c.blocking_write_byte(byte);
+    }
+}
+
 fn core_0_main() -> ! {
     console::print_str("Hello from a print_str call!\n")
         .expect("print_str failed");
 
     println!("Hello from a println call, {}", "Phoebe");
     
-    panic!("Check out this panic message!");
+    println!("Now echoing:");
+
+    echo_loop()
 }

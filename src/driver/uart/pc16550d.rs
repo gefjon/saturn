@@ -461,4 +461,10 @@ impl Console for Pc16550d {
     unsafe fn unchecked_write_byte(&mut self, b: u8) {
         self.thr().set(b);
     }
+    fn can_read(&mut self) -> bool {
+        self.lsr().matches_all(LSR::data_ready::Data)
+    }
+    unsafe fn unchecked_read_byte(&mut self) -> u8 {
+        self.rbr().get()
+    }
 }

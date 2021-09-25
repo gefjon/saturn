@@ -19,6 +19,12 @@ pub trait Console {
             self.blocking_write_byte(b);
         }
     }
+    unsafe fn unchecked_read_byte(&mut self) -> u8;
+    fn can_read(&mut self) -> bool;
+    fn blocking_read_byte(&mut self) -> u8 {
+        block_until(|| self.can_read(), 1);
+        unsafe { self.unchecked_read_byte() }
+    }
 }
 
 struct ConsoleWriter<T>(T);
@@ -49,7 +55,7 @@ pub unsafe fn force_unlock_console() {
 
 pub unsafe fn init_console() {}
 
-pub fn with_console<F, R>(f: F) -> Result<R, fmt::Error>
+pub fn with_writing<F, R>(f: F) -> Result<R, fmt::Error>
 where
     F: FnOnce(&mut dyn fmt::Write) -> Result<R, fmt::Error>,
 {
@@ -57,11 +63,11 @@ where
 }
 
 pub fn print_str(s: &str) -> fmt::Result {
-    with_console(|c| c.write_str(s))
+    with_writing(|c| c.write_str(s))
 }
 
 pub fn print(arg: fmt::Arguments<'_>) -> fmt::Result {
-    with_console(|c| c.write_fmt(arg))
+    with_writing(|c| c.write_fmt(arg))
 }
 
 #[macro_export]
