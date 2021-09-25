@@ -23,7 +23,7 @@ pub unsafe extern "C" fn _el2_entry() -> ! {
         el1_entry = sym el1_entry,
         become_el1 = sym become_el1,
 
-        options(nomem, nostack, noreturn),
+        options(noreturn),
     );
 }
 
@@ -41,7 +41,7 @@ unsafe extern "C" fn become_el1(_entry: extern "C" fn() -> !) ->! {
         
         el2_lower_to_el1 = sym el2_lower_to_el1,
 
-        options(nomem, nostack, noreturn),
+        options(noreturn),
     )
 }
 
@@ -61,7 +61,7 @@ unsafe extern "C" fn el2_lower_to_el1(_entry: extern "C" fn() -> !) -> ! {
         "msr elr_el2, x0",
         "eret",
 
-        options(nomem, nostack, noreturn),
+        options(noreturn),
     )
 }
 
@@ -73,16 +73,20 @@ unsafe extern "C" fn el1_entry() -> ! {
         "msr spsel, #1",
 
         // set the stack pointer to just before the beginning of the code section
-        "adr {scratch}, {text_start}",
-        "mov sp, {scratch}",
+        "adr x9, {text_start}",
+        "mov sp, x9",
+        "b {init_and_enter}",
         
         text_start = sym memory::__text_start,
-        
-        scratch = out(reg) _,
-        
-        options(nomem, nostack),
-    );
 
+        init_and_enter = sym init_and_enter,
+        
+        options(noreturn),
+    )
+}
+
+#[link_section = ".text.boot"]
+unsafe extern "C" fn init_and_enter() -> ! {
     memory::init_data();
     console::init_console();
     core_0_main()

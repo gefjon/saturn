@@ -1,8 +1,12 @@
 ///! see [../../../doc/pl011.pdf]
 
-use register::{register_bitfields, mmio::{ReadOnly, ReadWrite, WriteOnly}};
+use tock_registers::{
+    register_bitfields,
+    registers::{ReadOnly, ReadWrite, WriteOnly},
+    interfaces::{Readable, Writeable},
+};
 use crate::{asm::block_until};
-use core::fmt::{self, Write};
+use crate::console::Console;
 
 // there are a lot more registers, but i don't care about them
 register_bitfields! {
@@ -42,21 +46,11 @@ define_register_block! {
 
 unsafe impl Send for Pl011 {}
 
-impl Write for Pl011 {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for b in s.bytes() {
-            self.write_byte(b);
-        }
-        Ok(())
+impl Console for Pl011 {
+    unsafe fn unchecked_write_byte(&mut self, byte: u8) {
+        self.dr().set(byte as u16);
     }
-}
-
-impl Pl011 {
     fn can_write(&mut self) -> bool {
         !self.fr().is_set(FR::trans_fifo_full)
-    }
-    fn write_byte(&mut self, b: u8) {
-        block_until(|| self.can_write(), 1);
-        self.dr().set(b as u16);
     }
 }

@@ -20,7 +20,7 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
-cortex-a = "3.0"
+cortex-a = "6.1"
 r0 = "1.0"
-register = "0.5"
-spin = "0.7"
+tock-registers = "0.7"
+spin = "0.9"

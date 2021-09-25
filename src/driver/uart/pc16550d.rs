@@ -1,7 +1,11 @@
 ///! See [../../../doc/pc16550d.pdf]
 
-use register::{register_bitfields,  mmio::{ReadOnly, ReadWrite, WriteOnly}};
-use crate::{asm::block_until};
+use tock_registers::{
+    register_bitfields,
+    registers::{ReadOnly, ReadWrite, WriteOnly},
+    interfaces::{Readable, Writeable}
+};
+use crate::{console::Console, asm::block_until};
 use core::fmt::{self, Write};
 
 register_bitfields! {
@@ -448,23 +452,13 @@ define_register_block! {
     }
 }
 
-impl Write for Pc16550d {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for b in s.bytes() {
-            self.write_byte(b);
-        }
-        Ok(())
-    }
-}
-
 unsafe impl Send for Pc16550d {}
 
-impl Pc16550d {
+impl Console for Pc16550d {
     fn can_write(&mut self) -> bool {
         self.lsr().matches_all(LSR::trans_hold_reg_empty::Empty)
     }
-    fn write_byte(&mut self, b: u8) {
-        block_until(|| self.can_write(), 1);
+    unsafe fn unchecked_write_byte(&mut self, b: u8) {
         self.thr().set(b);
     }
 }

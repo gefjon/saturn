@@ -6,7 +6,7 @@
     naked_functions,
     format_args_nl,
     panic_info_message,
-    const_in_array_repeat_expressions,
+    min_specialization,
 )]
 
 #[cfg(feature = "virt")]
