@@ -70,6 +70,21 @@ fn core_0_main() -> ! {
         .expect("print_str failed");
 
     println!("Hello from a println call, {}", "Phoebe");
+
+    if memory::in_kaddr_space() {
+        let pc = asm::get_pc();
+        panic!(
+            "We're in the high address space at {:x} when we should be in the low address space at {:x}!",
+            pc, memory::kaddr_to_paddr(pc),
+        );
+    } else {
+        let pc = asm::get_pc();
+        println!("We are in the low address space, and all is well with the world.");
+        println!(
+            "PC is currently {:x}, which would be {:x} in the high address space",
+            pc, memory::paddr_to_kaddr(pc),
+        );
+    }
     
     println!("Now echoing:");
 

@@ -140,3 +140,14 @@ where
         block(wait);
     }
 }
+
+#[inline(always)]
+pub fn get_pc() -> u64 {
+    let pc: u64;
+    unsafe { asm!(
+        "adr {pc}, #0",
+        pc = out(reg) pc,
+        options(nomem, nostack),
+    ); }
+    pc
+}
