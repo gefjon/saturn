@@ -89,5 +89,6 @@ unsafe extern "C" fn el1_entry() -> ! {
 unsafe extern "C" fn init_and_enter() -> ! {
     memory::init_data();
     console::init_console();
+    memory::framealloc::init_frame_allocator(memory::kernel_end(), memory::max_phys_addr());
     core_0_main()
 }

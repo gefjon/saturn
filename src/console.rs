@@ -55,6 +55,13 @@ pub unsafe fn force_unlock_console() {
 
 pub unsafe fn init_console() {}
 
+pub fn with_console<F, R>(f: F) -> R
+where
+    F: FnOnce(&mut dyn Console) -> R
+{
+    f(&mut *lock_console())
+}
+
 pub fn with_writing<F, R>(f: F) -> Result<R, fmt::Error>
 where
     F: FnOnce(&mut dyn fmt::Write) -> Result<R, fmt::Error>,
